@@ -31,7 +31,9 @@ def on_ui_settings():
     # txt: server_url
     shared.opts.add_option("outside_server_url_port", shared.OptionInfo("", "Outside Eagle server connection (url:port)", section=("eagle_pnginfo", "Eagle Pnginfo")))
     # specify Eagle folderID
-    shared.opts.add_option("save_to_eagle_folderid", shared.OptionInfo("", "(option) FolderID or FolderName on Eagle", component_args=shared.hide_dirs, section=("eagle_pnginfo", "Eagle Pnginfo")))
+    shared.opts.add_option("save_to_eagle_folderid", shared.OptionInfo("", "(option) FolderID or FolderName on Eagle; if empty, defaults to three folders below", component_args=shared.hide_dirs, section=("eagle_pnginfo", "Eagle Pnginfo")))
+    shared.opts.add_option("save_to_eagle_folderid_txt2img", shared.OptionInfo("", "(option) FolderID or FolderName for txt2img images on Eagle", component_args=shared.hide_dirs, section=("eagle_pnginfo", "Eagle Pnginfo")))
+    shared.opts.add_option("save_to_eagle_folderid_img2img", shared.OptionInfo("", "(option) FolderID or FolderName for img2img images on Eagle", component_args=shared.hide_dirs, section=("eagle_pnginfo", "Eagle Pnginfo")))
     # specify Eagle folderID
     shared.opts.add_option("allow_to_create_folder_on_eagle", shared.OptionInfo(False, "(option) Allow to create folder on Eagle, if specified foldername dont exists.", section=("eagle_pnginfo", "Eagle Pnginfo")))
 
@@ -45,9 +47,23 @@ def on_image_saved(params:script_callbacks.ImageSaveParams):
         fullfn = os.path.join(path_root, params.filename)
         info = params.pnginfo.get('parameters', None)
         filename = os.path.splitext(os.path.basename(fullfn))[0]
-        #
-        pos_prompt = params.p.prompt
-        neg_prompt = params.p.negative_prompt
+        # params
+        pos_prompt = ''
+        neg_prompt = ''
+        denoising_strength = None
+        hr_upscaler = None
+        if params.p is not None:
+            pos_prompt = params.p.prompt
+            neg_prompt = params.p.negative_prompt
+            denoising_strength = params.p.denoising_strength
+            if hasattr(params.p, 'hr_upscaler'):
+                hr_upscaler = params.p.hr_upscaler
+        # check img2img or txt2img
+        is_img2img = bool(denoising_strength) and hr_upscaler == None
+        if is_img2img:
+            opts_folderId = shared.opts.save_to_eagle_folderid_img2img or shared.opts.save_to_eagle_folderid
+        else:
+            opts_folderId = shared.opts.save_to_eagle_folderid_txt2img or shared.opts.save_to_eagle_folderid
         #
         annotation = None
         tags = []
@@ -83,7 +99,7 @@ def on_image_saved(params:script_callbacks.ImageSaveParams):
                     annotation=annotation
                 )
             server_url, port = api_util.get_url_port(shared.opts.outside_server_url_port)
-            folderId = _get_folderId(shared.opts.save_to_eagle_folderid, shared.opts.allow_to_create_folder_on_eagle, server_url=server_url, port=port)
+            folderId = _get_folderId(opts_folderId, shared.opts.allow_to_create_folder_on_eagle, server_url=server_url, port=port)
             _ret = api_item.add_from_URL_base64(
                 item,
                 folderId=folderId,
@@ -99,7 +115,7 @@ def on_image_saved(params:script_callbacks.ImageSaveParams):
                 annotation=annotation,
                 tags=tags
             )
-            folderId = _get_folderId(shared.opts.save_to_eagle_folderid, shared.opts.allow_to_create_folder_on_eagle)
+            folderId = _get_folderId(opts_folderId, shared.opts.allow_to_create_folder_on_eagle)
             _ret = api_item.add_from_path(
                 item=item,
                 folderId=folderId
