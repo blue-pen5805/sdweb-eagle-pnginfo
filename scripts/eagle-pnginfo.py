@@ -1,4 +1,5 @@
 import os
+import re
 
 import gradio as gr
 
@@ -53,8 +54,10 @@ def on_image_saved(params:script_callbacks.ImageSaveParams):
         denoising_strength = None
         hr_upscaler = None
         if params.p is not None:
-            pos_prompt = params.p.prompt
-            neg_prompt = params.p.negative_prompt
+            seed = re.search("Seed: (\d+)", info).group(1)
+            index = params.p.all_seeds.index(int(seed))
+            pos_prompt = params.p.all_prompts[index]
+            neg_prompt = params.p.all_negative_prompts[index]
             denoising_strength = params.p.denoising_strength
             if hasattr(params.p, 'hr_upscaler'):
                 hr_upscaler = params.p.hr_upscaler
