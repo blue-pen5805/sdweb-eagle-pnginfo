@@ -1,4 +1,5 @@
 import os
+import re
 
 import gradio as gr
 
@@ -53,8 +54,10 @@ def on_image_saved(params:script_callbacks.ImageSaveParams):
         denoising_strength = None
         hr_upscaler = None
         if params.p is not None:
-            pos_prompt = params.p.prompt
-            neg_prompt = params.p.negative_prompt
+            seed = re.search("Seed: (\d+)", info).group(1)
+            index = params.p.all_seeds.index(int(seed))
+            pos_prompt = params.p.all_prompts[index]
+            neg_prompt = params.p.all_negative_prompts[index]
             denoising_strength = params.p.denoising_strength
             if hasattr(params.p, 'hr_upscaler'):
                 hr_upscaler = params.p.hr_upscaler
@@ -72,12 +75,14 @@ def on_image_saved(params:script_callbacks.ImageSaveParams):
         if shared.opts.save_positive_prompt_to_eagle_as_tags:
             if len(pos_prompt.split(",")) > 0:
                 tags += Parser.prompt_to_tags(pos_prompt)
+                tags += Parser.extra_networks_to_tags(pos_prompt)
         if shared.opts.save_negative_prompt_to_eagle_as == "tag":
             if len(neg_prompt.split(",")) > 0:
                 tags += Parser.prompt_to_tags(neg_prompt)
+                tags += Parser.extra_networks_to_tags(neg_prompt)
         elif shared.opts.save_negative_prompt_to_eagle_as == "n:tag":
             if len(neg_prompt.split(",")) > 0:
-                tags += [ f"n:{x}" for x in Parser.prompt_to_tags(neg_prompt) ]
+                tags += [ f"n:{x}" for x in Parser.extra_networks_to_tags(neg_prompt) + Parser.prompt_to_tags(neg_prompt) ]
         if shared.opts.additional_tags_to_eagle != "":
             gen = TagGenerator(p=params.p, image=params.image)
             _tags = gen.generate_from_p(shared.opts.additional_tags_to_eagle)
