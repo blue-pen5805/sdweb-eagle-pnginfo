@@ -47,6 +47,7 @@ def on_image_saved(params:script_callbacks.ImageSaveParams):
         # collect info
         fullfn = os.path.join(path_root, params.filename)
         info = params.pnginfo.get('parameters', None)
+        extras = params.pnginfo.get("extras", None)
         filename = os.path.splitext(os.path.basename(fullfn))[0]
         # params
         pos_prompt = ''
@@ -72,6 +73,8 @@ def on_image_saved(params:script_callbacks.ImageSaveParams):
         tags = []
         if shared.opts.save_generationinfo_to_eagle_as_annotation:
             annotation = info
+            if extras:
+                annotation += '\n' + extras
         if shared.opts.save_positive_prompt_to_eagle_as_tags:
             if len(pos_prompt.split(",")) > 0:
                 tags += Parser.prompt_to_tags(pos_prompt)
