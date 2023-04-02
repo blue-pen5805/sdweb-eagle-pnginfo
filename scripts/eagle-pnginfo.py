@@ -75,12 +75,14 @@ def on_image_saved(params:script_callbacks.ImageSaveParams):
         if shared.opts.save_positive_prompt_to_eagle_as_tags:
             if len(pos_prompt.split(",")) > 0:
                 tags += Parser.prompt_to_tags(pos_prompt)
+                tags += Parser.extra_networks_to_tags(pos_prompt)
         if shared.opts.save_negative_prompt_to_eagle_as == "tag":
             if len(neg_prompt.split(",")) > 0:
                 tags += Parser.prompt_to_tags(neg_prompt)
+                tags += Parser.extra_networks_to_tags(neg_prompt)
         elif shared.opts.save_negative_prompt_to_eagle_as == "n:tag":
             if len(neg_prompt.split(",")) > 0:
-                tags += [ f"n:{x}" for x in Parser.prompt_to_tags(neg_prompt) ]
+                tags += [ f"n:{x}" for x in Parser.extra_networks_to_tags(neg_prompt) + Parser.prompt_to_tags(neg_prompt) ]
         if shared.opts.additional_tags_to_eagle != "":
             gen = TagGenerator(p=params.p, image=params.image)
             _tags = gen.generate_from_p(shared.opts.additional_tags_to_eagle)
