@@ -27,6 +27,7 @@ def on_ui_settings():
     shared.opts.add_option("save_positive_prompt_to_eagle_as_tags", shared.OptionInfo(False, "Save positive prompt to Eagle as tags", section=("eagle_pnginfo", "Eagle Pnginfo")))
     shared.opts.add_option("save_negative_prompt_to_eagle_as", shared.OptionInfo("n:tag", "Save negative prompt as", gr.Radio, {"choices": ["None", "tag", "n:tag"]}, section=("eagle_pnginfo", "Eagle Pnginfo")))
     shared.opts.add_option("use_prompt_parser_when_save_prompt_to_eagle_as_tags", shared.OptionInfo(False, "Use prompt parser when save prompt to eagle as tags", section=("eagle_pnginfo", "Eagle Pnginfo")))
+    shared.opts.add_option("save_tags_words_threshold", shared.OptionInfo(0, "Ignore tags with word counts above the threshold", gr.Slider, {"minimum": 0, "maximum": 20, "step": 1}, section=("eagle_pnginfo", "Eagle Pnginfo")))
     # txt: Additinal tags
     shared.opts.add_option("additional_tags_to_eagle", shared.OptionInfo("", "Additinal tag pattern", section=("eagle_pnginfo", "Eagle Pnginfo")))
     # txt: server_url
